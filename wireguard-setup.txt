@@ -1,0 +1,25 @@
+# Rough steps to setup WG on computers
+# Install Wireguard, a reboot and update were required
+sudo dnf update
+sudo dnf copr enable jdoss/wireguard
+sudo dnf install wireguard-dkms wireguard-tools
+sudo dnf update
+sudo reboot now
+
+# Create ssh keys on each node, need to ensure they are not world-readable
+mkdir .wg
+cd .wg
+wg genkey | tee client.pri | wg pubkey > client.pub
+chmod -R 700 .wg
+
+# Create the wireguard interface config and ensure it is not world-readable (see accompaning sameple configs)
+mkdir /etc/wireguard
+sudo vi /etc/wireguard/wg0.conf
+sudo chmod 700 /etc/wireguard/wg0.conf
+
+# Bring up the interface and enable so it comes up at system startup
+sudo wg-quick up wg0
+sudo systemctl enable wg-quick@wg0
+
+# If you need to make a change to the config, gracefully bring it down and back up to ensure config saves
+sudo wg-quick down wg0 && sudo wg-quick up wg0
